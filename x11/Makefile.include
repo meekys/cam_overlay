@@ -1,0 +1,6 @@
+
+#CFLAGS+=
+
+LDFLAGS+=-lm -lEGL -lGLESv2 -lX11
+
+#INCLUDES+=

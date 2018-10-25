@@ -4,13 +4,22 @@
 It's primary purpose is to offload as much of the image processing/decoding to the Raspberry Pi's GPU as possible and disply a reverse camera overlay.
 
 # Dependencies
+## Common
 - v4l2-dev
 - libpng-dev
+
+## X11 (Debian, Ubuntu, etc...)
+ - mesa-common-dev
+ - libgles2-mesa-dev
 
 TODO: Instructions to install dependencies
 
 # Compiling
+## Raspberry Pi
 Simply run `make` from the command line
+
+## X11 (Debian, Ubuntu, etc...)
+Run `make DISPLAY=x11` from the command line
 
 # Running
 From the command line, simply run with the appropriate parameters

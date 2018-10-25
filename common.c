@@ -3,8 +3,14 @@
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include "common.h"
+#include "gl_common.h"
+
+#ifdef DEBUG
+int log_verbose_enabled = 0;
+#endif
 
 extern void errno_exit(const char *s)
 {

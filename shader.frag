@@ -1,6 +1,16 @@
+#ifdef GL_ES
+#  ifdef GL_FRAGMENT_PRECISION_HIGH
+#    define maxfragp highp
+#  else
+#    define maxfragp mediump
+#  endif
+#else
+#  define maxfragp
+#endif
+
 uniform sampler2D texture;
 
-varying vec2 fragmentUV;
+varying maxfragp vec2 fragmentUV;
 
 void main(void)
 {

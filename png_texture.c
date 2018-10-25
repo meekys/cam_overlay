@@ -1,10 +1,10 @@
 // This one file (png_texture.cpp) is free and unencumbered software
 // released into the public domain.
 
-#include <GLES/gl.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
+#include <stdlib.h>
 #include <png.h>
+
+#include "gl_common.h"
 
 GLuint png_texture_load(const char * file_name, int * width, int * height)
 {

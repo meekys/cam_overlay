@@ -1,5 +1,9 @@
-OBJS=cam_overlay.o common.o display.o png_texture.o matrix.o
+DISPLAY:=bmc
+
+OBJS=cam_overlay.o common.o display.o $(DISPLAY)/display.o png_texture.o
 BIN=cam_overlay.bin
-LDFLAGS+=-lilclient -lpng
+CFLAGS+=-I$(DISPLAY)
+LDFLAGS+=-lpng
 
 include ./Makefile.include
+include ./$(DISPLAY)/Makefile.include

@@ -1,5 +1,8 @@
 /*
- *  V4L2 video capture example
+ * cam_overlay
+ *   Simple webcam overlay for Raspberry Pi
+ * 
+ *  Based on V4L2 video capture example
  *
  *  This program can be used and distributed without restrictions.
  *
@@ -26,17 +29,14 @@
 
 #include <linux/videodev2.h>
 
-#include "bcm_host.h"
-
-#include "GLES/gl.h"
-#include "GLES2/gl2.h"
-#include "EGL/egl.h"
-#include "EGL/eglext.h"
+#include "gl_common.h"
 
 #include "common.h"
 #include "display.h"
 #include "png_texture.h"
-#include "matrix.h"
+
+#define MATH_3D_IMPLEMENTATION
+#include "math_3d.h"
 
 #ifndef ALIGN_UP
 #define ALIGN_UP(x,y)  ((x + (y)-1) & ~((y)-1))
@@ -46,57 +46,14 @@
 
 #define TEXTURE_BUFFER // Use intermediate texture for decoding to
 
-typedef struct
-{
-    Matrix4                     matrix;
-    GLuint                      program;
-    GLuint                      uniform_projection_matrix;
-    GLuint                      attrib_vertex;
-    GLuint                      attrib_uv;
-    GLuint                      uniform_texture;
-    GLuint                      uniform_width;
-
-} DECODER_T;
-
-typedef struct
-{
-    Matrix4                     matrix;
-    GLuint                      program;
-    GLuint                      uniform_projection_matrix;
-    GLuint                      attrib_vertex;
-    GLuint                      attrib_uv;
-    GLuint                      uniform_texture;
-
-} OVERLAY_T;
-
-typedef struct
-{
-    int                         width;
-    int                         height;
-    uint32_t                    screen_width;
-    uint32_t                    screen_height;
-    EGLDisplay                  display;
-    EGLContext                  context;
-    EGLSurface                  surface;
-    DISPMANX_DISPLAY_HANDLE_T   dispman_display;
-    DISPMANX_ELEMENT_HANDLE_T   dispman_element;
-
-    DECODER_T                   decoder;
-    OVERLAY_T                   overlay;
-
-    GLuint                      image_texture;
-    GLuint                      render_texture;
-    GLuint                      overlay_texture;
-
-    GLuint                      render_buffer;
-
-    // vertex + uv buffer
-    GLuint                      buffer_screen;
-    GLuint                      buffer_overlay;
-    GLuint                      buffer_render;
-} STATE_T;
-
 static STATE_T          gState;
+
+typedef struct
+{
+    vec3_t  p;
+    GLfloat u;
+    GLfloat v;
+} VERTEX_T;
 
 enum io_method {
     IO_METHOD_READ,
@@ -111,6 +68,10 @@ struct buffer {
 
 static char            *dev_name;
 static enum io_method   io = IO_METHOD_MMAP;
+static char             stretch = 0;
+static char             rotate = 0;
+static char             flip_horizontal = 0;
+static char             flip_vertical = 0;
 static int              fd = -1;
 struct buffer          *buffers;
 static unsigned int     n_buffers;
@@ -118,47 +79,54 @@ static int              force_format;
 
 static volatile int running = 1;
 
+extern void init_display(STATE_T *state, int display, int layer);
+extern NativeWindowType init_window(STATE_T *state, int display, int layer);
+extern void close_display(STATE_T *state);
+
 static void interruptHandler(int unused) {
     running = 0;
 }
 
 static void init_ogl(STATE_T *state, int display, int layer)
 {
-    int32_t success = 0;
+    init_display(state, display, layer);
+
     EGLBoolean result;
-    EGLint num_config;
-
-    static EGL_DISPMANX_WINDOW_T nativewindow;
-
-    DISPMANX_UPDATE_HANDLE_T dispman_update;
-    VC_RECT_T dst_rect;
-    VC_RECT_T src_rect;
-
-    static const EGLint attribute_list[] =
-    {
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_NONE
-    };
-
-    EGLConfig config;
 
     // get an EGL display connection
+    log_verbose("eglGetDisplay");
     state->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     assert(state->display != EGL_NO_DISPLAY);
     check();
 
     // initialize the EGL display connection
+    log_verbose("eglInitialize");
     result = eglInitialize(state->display, NULL, NULL);
     assert(EGL_FALSE != result);
     check();
 
+    static const EGLint attribute_list[] =
+    {
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        //EGL_DEPTH_SIZE, 16,
+        //EGL_STENCIL_SIZE, 0,
+        //EGL_SAMPLE_BUFFERS, 1,
+        //EGL_SAMPLES, 4,
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_NONE
+    };
+
     // get an appropriate EGL frame buffer configuration
+    EGLConfig config;
+    EGLint num_config;
+    log_verbose("eglChooseConfig");
     result = eglChooseConfig(state->display, attribute_list, &config, 1, &num_config);
     assert(EGL_FALSE != result);
+    assert(num_config == 1);
     check();
 
     // // get an appropriate EGL frame buffer configuration
@@ -173,49 +141,23 @@ static void init_ogl(STATE_T *state, int display, int layer)
     };
 
     // create an EGL rendering context
+    log_verbose("eglCreateContext");
     state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, context_attributes);
     assert(state->context != EGL_NO_CONTEXT);
     check();
 
-    // create an EGL window surface
-    success = graphics_get_display_size(display /* LCD */, &state->screen_width, &state->screen_height);
-    assert(success >= 0);
+    NativeWindowType window = init_window(state, display, layer);
 
-    dst_rect.x = 0;
-    dst_rect.y = 0;
-    dst_rect.width = state->screen_width;
-    dst_rect.height = state->screen_height;
+    log_verbose("eglCreateWindowSurface");
+    state->surface = eglCreateWindowSurface(state->display, config, window, NULL);
+    assert(state->surface != EGL_NO_SURFACE);
+    check();
 
-    src_rect.x = 0;
-    src_rect.y = 0;
-    src_rect.width = state->screen_width << 16;
-    src_rect.height = state->screen_height << 16;
-
-    state->dispman_display = vc_dispmanx_display_open(display /* LCD */);
-    dispman_update = vc_dispmanx_update_start(0);
-
-    state->dispman_element = vc_dispmanx_element_add(
-        dispman_update,
-        state->dispman_display,
-        layer /*layer*/,
-        &dst_rect,
-        0 /*src*/,
-        &src_rect,
-        DISPMANX_PROTECTION_NONE,
-        0 /*alpha*/,
-        0 /*clamp*/,
-        0 /*transform*/);
-
-    nativewindow.element = state->dispman_element;
-    nativewindow.width = state->screen_width;
-    nativewindow.height = state->screen_height;
-    vc_dispmanx_update_submit_sync(dispman_update);
-
-    state->surface = eglCreateWindowSurface(state->display, config, &nativewindow, NULL);
     assert(state->surface != EGL_NO_SURFACE);
     check();
 
     // connect the context to the surface
+    log_verbose("eglMakeCurrent");
     result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
     assert(EGL_FALSE != result);
     check();
@@ -226,19 +168,23 @@ static void init_ogl(STATE_T *state, int display, int layer)
 
     // Set background color and clear buffers
     //   glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
-
-    // Enable back face culling.
-    //glEnable(GL_CULL_FACE);
-
-    // glMatrixMode(GL_MODELVIEW);
 }
 
 static void init_shaders(STATE_T *state, const char* vertex_filename, const char* fragment_filename, const char* decoder_fragment_filename)
 {
     char* vertex_source = read_file(vertex_filename);
-    char* fragment_source = read_file(fragment_filename);
-    char* decoder_fragment_source = read_file(decoder_fragment_filename);
+    if (!vertex_source)
+        exit(EXIT_FAILURE);
 
+    char* fragment_source = read_file(fragment_filename);
+    if (!fragment_source)
+        exit(EXIT_FAILURE);
+
+    char* decoder_fragment_source = read_file(decoder_fragment_filename);
+    if (!decoder_fragment_source)
+        exit(EXIT_FAILURE);
+        
+    log_verbose("vertex_source + decoder_fragment_source");
     state->decoder.program = compile_shader_program(vertex_source, decoder_fragment_source);
     state->decoder.uniform_projection_matrix = glGetUniformLocation(state->decoder.program, "projection_matrix");
     state->decoder.attrib_vertex   = glGetAttribLocation(state->decoder.program, "vertex");
@@ -247,6 +193,7 @@ static void init_shaders(STATE_T *state, const char* vertex_filename, const char
     state->decoder.uniform_width   = glGetUniformLocation(state->decoder.program, "width");
     check();
 
+    log_verbose("vertex_source + fragment_source");
     state->overlay.program = compile_shader_program(vertex_source, fragment_source);
     state->overlay.uniform_projection_matrix = glGetUniformLocation(state->overlay.program, "projection_matrix");
     state->overlay.attrib_vertex   = glGetAttribLocation(state->overlay.program, "vertex");
@@ -261,39 +208,24 @@ static void init_shaders(STATE_T *state, const char* vertex_filename, const char
     check();
 }
 
-static GLfloat screenQuad[4][5] = { // x, y, z, u, v
-    {-1.0f,  1.0f, 0.0f,    0.0f, 0.0f}, // Top left
-    {-1.0f, -1.0f, 0.0f,    0.0f, 1.0f}, // Bottom left
-    { 1.0f,  1.0f, 0.0f,    1.0f, 0.0f}, // Top right
-    { 1.0f, -1.0f, 0.0f,    1.0f, 1.0f}  // Bottom right
+static VERTEX_T screenQuad[4] = { // x, y, z, u, v
+    {{-1.0f,  1.0f, 0.0f},    0.0f, 0.0f}, // Top left
+    {{-1.0f, -1.0f, 0.0f},    0.0f, 1.0f}, // Bottom left
+    {{ 1.0f,  1.0f, 0.0f},    1.0f, 0.0f}, // Top right
+    {{ 1.0f, -1.0f, 0.0f},    1.0f, 1.0f}  // Bottom right
 };
-static GLfloat overlayQuad[4][5] = { // x, y, z, u, v
-    {-1.0f,  1.0f,  2.0f,    0.0f, 1.0f}, // Top left
-    {-1.0f, -1.0f,  1.0f,    0.0f, 0.0f}, // Bottom left
-    { 1.0f,  1.0f,  2.0f,    1.0f, 1.0f}, // Top right
-    { 1.0f, -1.0f,  1.0f,    1.0f, 0.0f}  // Bottom right
+static VERTEX_T overlayQuad[4] = { // x, y, z, u, v
+    {{-1.0f,  1.0f,  2.0f},    0.0f, 1.0f}, // Top left
+    {{-1.0f, -1.0f,  1.0f},    0.0f, 0.0f}, // Bottom left
+    {{ 1.0f,  1.0f,  2.0f},    1.0f, 1.0f}, // Top right
+    {{ 1.0f, -1.0f,  1.0f},    1.0f, 0.0f}  // Bottom right
 };
-static const GLfloat renderQuad[4][5] = { // x, y, z, u, v
-    {-1.0f,  1.0f, 0.0f,    0.0f, 1.0f}, // Top left
-    {-1.0f, -1.0f, 0.0f,    0.0f, 0.0f}, // Bottom left
-    { 1.0f,  1.0f, 0.0f,    1.0f, 1.0f}, // Top right
-    { 1.0f, -1.0f, 0.0f,    1.0f, 0.0f}  // Bottom right
+static const VERTEX_T renderQuad[4] = { // x, y, z, u, v
+    {{-1.0f,  1.0f, 0.0f},    0.0f, 1.0f}, // Top left
+    {{-1.0f, -1.0f, 0.0f},    0.0f, 0.0f}, // Bottom left
+    {{ 1.0f,  1.0f, 0.0f},    1.0f, 1.0f}, // Top right
+    {{ 1.0f, -1.0f, 0.0f},    1.0f, 0.0f}  // Bottom right
 };
-
-static void adjust_coordinates(STATE_T *state)
-{
-    // Adjusts coordinates to maintain ratio within (-1, -1) to (1.0, 1.0)
-    // Assumes width > height, adjusting x coordinates to compensate for perspective
-    //float ratio = (float)state->width / state->height;
-
-    // Or stretches to full screen
-    float ratio = (float)state->screen_width / state->screen_height;
-
-    for (int i = 0; i < 4; i++) {
-        screenQuad[i][0] *= ratio;
-        overlayQuad[i][0] *= ratio;
-    }
-}
 
 static GLuint create_vertex_buffer(GLuint size, const void* data)
 {
@@ -310,21 +242,29 @@ static GLuint create_vertex_buffer(GLuint size, const void* data)
 
 static void init_view(STATE_T *state)
 {
-    // glViewport(0, 0, (GLsizei)state->screen_width, (GLsizei)state->screen_height);
-
-    // glMatrixMode(GL_PROJECTION);
-    // glLoadIdentity();
-
     glEnable(GL_BLEND);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    adjust_coordinates(state);
+    float aspect = (float)state->screen_width / state->screen_height;
 
-    GLfloat aspect = (float)state->screen_width/state->screen_height;
+    state->decoder.matrix = m4_ortho(-aspect, aspect, -1.0f, 1.0f, -1.0f, 1.0f);
+    state->overlay.matrix = m4_perspective2(90.0f, aspect, -1.0f, 1.0f);
 
-    ortho(state->decoder.matrix, -aspect, aspect, -1.0f, 1.0f, -1.0f, 1.0f);
-    perspective(state->overlay.matrix, 90.0f, aspect, -1.0, 1.0f);
+    if (!stretch)
+        aspect = (float)state->width / state->height;
+
+    state->decoder.matrix = m4_mul(state->decoder.matrix, m4_scaling(vec3(aspect, 1, 1)));
+    state->overlay.matrix = m4_mul(state->overlay.matrix, m4_scaling(vec3(aspect, 1, 1)));
+
+    if (rotate)
+        state->decoder.matrix = m4_mul(state->decoder.matrix, m4_rotation_z(M_PI)); // Rotate 180 degrees
+
+    if (flip_horizontal)
+        state->decoder.matrix = m4_mul(state->decoder.matrix, m4_scaling(vec3(-1, 1, 1)));
+
+    if (flip_vertical)
+        state->decoder.matrix = m4_mul(state->decoder.matrix, m4_scaling(vec3(1, -1, 1)));
 
     state->buffer_screen = create_vertex_buffer(sizeof(screenQuad), screenQuad);
     state->buffer_overlay = create_vertex_buffer(sizeof(overlayQuad), overlayQuad);
@@ -366,7 +306,7 @@ static void init_textures(STATE_T *state)
     check();
 }
 
-static void draw_overlay_image(STATE_T *state, const GLint vertex_buffer, const Matrix4 matrix, const GLint texture)
+static void draw_overlay_image(STATE_T *state, const GLint vertex_buffer, const mat4_t matrix, const GLint texture)
 {
     glUseProgram(state->overlay.program);
     check();
@@ -382,7 +322,7 @@ static void draw_overlay_image(STATE_T *state, const GLint vertex_buffer, const 
     glVertexAttribPointer(state->overlay.attrib_uv, 2, GL_FLOAT, 0, stride, BUFFER_OFFSET(sizeof(float) * 3));
     check();
 
-    glUniformMatrix4fv(state->overlay.uniform_projection_matrix, 1, 0, (GLfloat*)matrix);
+    glUniformMatrix4fv(state->overlay.uniform_projection_matrix, 1, 0, (GLfloat*)&matrix);
     check();
 
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -396,7 +336,7 @@ static void draw_overlay_image(STATE_T *state, const GLint vertex_buffer, const 
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-static void draw_decoder_image(STATE_T *state, const GLint vertex_buffer, const Matrix4 matrix, const GLint texture)
+static void draw_decoder_image(STATE_T *state, const GLint vertex_buffer, const mat4_t matrix, const GLint texture)
 {
     glUseProgram(state->decoder.program);
     check();
@@ -412,7 +352,7 @@ static void draw_decoder_image(STATE_T *state, const GLint vertex_buffer, const 
     glVertexAttribPointer(state->decoder.attrib_uv, 2, GL_FLOAT, 0, stride, BUFFER_OFFSET(sizeof(float) * 3));
     check();
 
-    glUniformMatrix4fv(state->decoder.uniform_projection_matrix, 1, 0, (GLfloat*)matrix);
+    glUniformMatrix4fv(state->decoder.uniform_projection_matrix, 1, 0, (GLfloat*)&matrix);
     check();
 
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -437,7 +377,7 @@ static void draw_screen(STATE_T *state)
     glViewport(0, 0, state->width, state->height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    draw_decoder_image(state, state->buffer_render, identitiyMatrix, state->image_texture);
+    draw_decoder_image(state, state->buffer_render, m4_identity(), state->image_texture);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     check();
@@ -479,10 +419,8 @@ static void update_image(STATE_T *state, const void* imageData)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-static void close_display(STATE_T *state)
+static void close_ogl(STATE_T *state)
 {
-    DISPMANX_UPDATE_HANDLE_T dispman_update;
-    int s;
     // clear screen
     glClear( GL_COLOR_BUFFER_BIT );
     eglSwapBuffers(state->display, state->surface);
@@ -491,13 +429,7 @@ static void close_display(STATE_T *state)
     glDeleteTextures(1, &state->image_texture);
     eglDestroySurface(state->display, state->surface);
 
-
-    dispman_update = vc_dispmanx_update_start(0);
-    s = vc_dispmanx_element_remove(dispman_update, state->dispman_element);
-    assert(s == 0);
-    vc_dispmanx_update_submit_sync(dispman_update);
-    s = vc_dispmanx_display_close(state->dispman_display);
-    assert (s == 0);
+    close_display(state);
 
     // Release OpenGL resources
     eglMakeCurrent(state->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -675,6 +607,8 @@ static void stop_capturing(void)
 
 static void start_capturing(void)
 {
+    log_verbose("Begin");
+
     unsigned int i;
     enum v4l2_buf_type type;
 
@@ -719,6 +653,8 @@ static void start_capturing(void)
             errno_exit("VIDIOC_STREAMON");
         break;
     }
+
+    log_verbose("End");
 }
 
 static void uninit_device(void)
@@ -945,15 +881,16 @@ static void init_device(STATE_T* state)
     if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt))
         errno_exit("VIDIOC_G_FMT");
 
-    int format[2];
+    static int format[2];
     CLEAR(format);
     format[0] = fmt.fmt.pix.pixelformat;
 
-    fprintf(stderr, "Dimensions: %d x %d Pixel Format: %s\n",
-             fmt.fmt.pix.width, fmt.fmt.pix.height, (char*)format);
-
     state->width = fmt.fmt.pix.width;
     state->height = fmt.fmt.pix.height;
+    state->format = (char*)format;
+
+    fprintf(stderr, "Dimensions: %d x %d Pixel Format: %s\n",
+             state->width, state->height, state->format);
 
     switch (io) {
     case IO_METHOD_READ:
@@ -1011,23 +948,37 @@ static void usage(FILE *fp, int argc, char **argv)
          "Version 1.3\n"
          "Options:\n"
          "-d | --device name   Video device name [%s]\n"
-         "-h | --help          Print this message\n"
+         "-? | --help          Print this message\n"
          "-m | --mmap          Use memory mapped buffers [default]\n"
          "-r | --read          Use read() calls\n"
          "-u | --userp         Use application allocated buffers\n"
+         "-s | --stretch       Stretch image to screen\n"
+         "-R | --rotate        Rotate image 180 degrees\n"
+         "-h | --fliph         Flip image horizontally\n"
+         "-v | --flipv         Flip image vertically\n"
+#if DEBUG
+         "-V | --verbose       Verbose\n"
+#endif
          "",
          argv[0], dev_name);
 }
 
-static const char short_options[] = "d:hmruofc:";
+static const char short_options[] = "d:?mrusRhvV";
 
 static const struct option
 long_options[] = {
-    { "device", required_argument, NULL, 'd' },
-    { "help",   no_argument,       NULL, 'h' },
-    { "mmap",   no_argument,       NULL, 'm' },
-    { "read",   no_argument,       NULL, 'r' },
-    { "userp",  no_argument,       NULL, 'u' },
+    { "device",  required_argument, NULL, 'd' },
+    { "help",    no_argument,       NULL, '?' },
+    { "mmap",    no_argument,       NULL, 'm' },
+    { "read",    no_argument,       NULL, 'r' },
+    { "userp",   no_argument,       NULL, 'u' },
+    { "stretch", no_argument,       NULL, 's' },
+    { "rotate",  no_argument,       NULL, 'R' },
+    { "fliph",   no_argument,       NULL, 'h' },
+    { "flipv",   no_argument,       NULL, 'v' },
+#if DEBUG
+    { "verbose", no_argument,       NULL, 'V' },
+#endif
     { 0, 0, 0, 0 }
 };
 
@@ -1053,7 +1004,7 @@ int main(int argc, char **argv)
             dev_name = optarg;
             break;
 
-        case 'h':
+        case '?':
             usage(stdout, argc, argv);
             exit(EXIT_SUCCESS);
 
@@ -1069,6 +1020,27 @@ int main(int argc, char **argv)
             io = IO_METHOD_USERPTR;
             break;
 
+        case 's':
+            stretch = 1;
+            break;
+
+        case 'R':
+            rotate = 1;
+            break;
+
+        case 'h':
+            flip_horizontal = 1;
+            break;
+
+        case 'v':
+            flip_vertical = 1;
+            break;
+
+#if DEBUG
+        case 'V':
+            log_verbose_enabled = 1;
+            break;
+#endif
         default:
             usage(stderr, argc, argv);
             exit(EXIT_FAILURE);
@@ -1080,9 +1052,12 @@ int main(int argc, char **argv)
     open_device();
     init_device(&gState);
 
-    bcm_host_init();
     init_ogl(&gState, 0, 10);
-    init_shaders(&gState, "shader.vert", "shader.frag", "shader-YUYV.frag");
+
+    char decoder_shader[20];
+    snprintf(decoder_shader, sizeof(decoder_shader), "shader-%s.frag", gState.format);
+    init_shaders(&gState, "shader.vert", "shader.frag", decoder_shader);
+
     init_view(&gState);
     init_textures(&gState);
 
@@ -1092,7 +1067,7 @@ int main(int argc, char **argv)
 
     stop_capturing();
 
-    close_display(&gState);
+    close_ogl(&gState);
 
     uninit_device();
     close_device();

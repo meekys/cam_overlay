@@ -1,7 +1,17 @@
+#ifdef GL_ES
+#  ifdef GL_FRAGMENT_PRECISION_HIGH
+#    define maxfragp highp
+#  else
+#    define maxfragp mediump
+#  endif
+#else
+#  define maxfragp
+#endif
+
 uniform sampler2D texture;
 uniform int width;
 
-varying vec2 fragmentUV;
+varying maxfragp vec2 fragmentUV;
 
 /*
 * Convert from YUYV422 to RGB.
@@ -13,9 +23,9 @@ varying vec2 fragmentUV;
 */
 void main(void)
 {
-    float fRealWidth = float(width);
-    vec2 uv = fragmentUV;
-    float fU = uv.x;
+    maxfragp float fRealWidth = float(width);
+    maxfragp vec2 uv = fragmentUV;
+    maxfragp float fU = uv.x;
 
     /* Scale U to [0.25,fRealWidth+0.25]. */
     fU *= fRealWidth;
@@ -29,8 +39,7 @@ void main(void)
     fU -= 0.5;
 
     /* If this is an odd fragment, fOdd is 1. */
-    float fOdd = mod(fU+0.0001, 2.0);
-
+    maxfragp float fOdd = mod(fU+0.0001, 2.0);
 
     /* Align fU to an even coordinate. */
     fU -= fOdd;
@@ -43,16 +52,16 @@ void main(void)
 
     uv.x = fU;
 
-    vec4 yuyv = texture2D( texture, uv );
+    maxfragp vec4 yuyv = texture2D( texture, uv );
 
-    vec3 yuv;
+    maxfragp vec3 yuv;
     if( fOdd <= 0.5 )
         yuv = yuyv.rga;
     else
         yuv = yuyv.bga;
     yuv -= vec3(16.0/255.0, 128.0/255.0, 128.0/255.0);
 
-    mat3 conv = mat3(
+    maxfragp mat3 conv = mat3(
         // Y     U (Cb)    V (Cr)
         1.1643,  0.000,    1.5958,  // R
         1.1643, -0.39173, -0.81290, // G
