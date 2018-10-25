@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 
 #include "bcm_host.h"
 
@@ -14,6 +15,7 @@ extern void init_display(STATE_T *state, int display, int layer)
 
 extern NativeWindowType init_window(STATE_T *state, int display, int layer)
 {
+    int success;
     DISPMANX_UPDATE_HANDLE_T dispman_update;
     VC_RECT_T dst_rect;
     VC_RECT_T src_rect;
@@ -62,9 +64,9 @@ extern void close_display(STATE_T *state)
     int s;
 
     dispman_update = vc_dispmanx_update_start(0);
-    s = vc_dispmanx_element_remove(dispman_update, state->dispman_element);
+    s = vc_dispmanx_element_remove(dispman_update, dispman_element);
     assert(s == 0);
     vc_dispmanx_update_submit_sync(dispman_update);
-    s = vc_dispmanx_display_close(state->dispman_display);
+    s = vc_dispmanx_display_close(dispman_display);
     assert (s == 0);
 }

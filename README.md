@@ -36,6 +36,7 @@ Command line parameters allow you to tweak the behavior.
 | -m       | --mmap      | Use memory mapped buffers [default]
 | -r       | --read      | Use read() calls
 | -u       | --userp     | Use application allocated buffers
-
-TODO: Options to control overlay position/perspective
-
+| -s       | --stretch   | Stretch image to screen
+| -R       | --rotate    | Rotate image 180 degrees
+| -h       | --fliph     | Flip image horizontally
+| -v       | --flipv     | Flip image vertically

@@ -1,6 +1,6 @@
 
 #CFLAGS+=
 
-LDFLAGS+=-lm -lEGL -lGLESv2 -lX11
+LDFLAGS+=std=c99 -lm -lEGL -lGLESv2 -lX11
 
 #INCLUDES+=
