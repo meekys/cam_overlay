@@ -8,6 +8,13 @@ It's primary purpose is to offload as much of the image processing/decoding to t
 - v4l2-dev
 - libpng-dev
 
+## Raspberry Pi
+### ilclient
+```
+cd /opt/vc/src/hello_pi/libs/ilclient
+make
+```
+
 ## X11 (Debian, Ubuntu, etc...)
  - mesa-common-dev
  - libgles2-mesa-dev
@@ -16,7 +23,7 @@ TODO: Instructions to install dependencies
 
 # Compiling
 ## Raspberry Pi
-Simply run `make` from the command line
+Simply run `make` from the command line in the cam_overlay directory
 
 ## X11 (Debian, Ubuntu, etc...)
 Run `make DISPLAY=x11` from the command line
@@ -28,8 +35,10 @@ From the command line, simply run with the appropriate parameters
 
 # Stopping
 If running from the command line, Ctrl+C will stop.
-If running from another application, sending a KILLTERM signal will also cleanly stop.
-Alternatively, using `killall cam_overlay.bin` will also stop.
+
+If stopping from another console, using `killall cam_overlay.bin` will stop.
+
+If running from another application, sending a KILLTERM signal will stop.
 
 # Command line parameters
 
