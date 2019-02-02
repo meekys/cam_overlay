@@ -26,6 +26,11 @@ From the command line, simply run with the appropriate parameters
 
 `./cam_overlay.bin`
 
+# Stopping
+If running from the command line, Ctrl+C will stop.
+If running from another application, sending a KILLTERM signal will also cleanly stop.
+Alternatively, using `killall cam_overlay.bin` will also stop.
+
 # Command line parameters
 
 Command line parameters allow you to tweak the behavior.
