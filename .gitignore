@@ -51,3 +51,14 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# CMake build artifaces
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# VSCode
+.vscode/ipch/
+
+Generated/

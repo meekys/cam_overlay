@@ -7,6 +7,7 @@ It's primary purpose is to offload as much of the image processing/decoding to t
 ## Common
 - v4l2-dev
 - libpng-dev
+- X11-dev [optional]
 
 ## Raspberry Pi
 ### ilclient
@@ -23,20 +24,17 @@ TODO: Instructions to install dependencies
 
 # Compiling
 ## Raspberry Pi
-Simply run `make` from the command line in the cam_overlay directory
-
-## X11 (Debian, Ubuntu, etc...)
-Run `make DISPLAY=x11` from the command line
+Simply run `cmake . && make`
 
 # Running
 From the command line, simply run with the appropriate parameters
 
-`./cam_overlay.bin`
+`./src/App/camoverlay.bin`
 
 # Stopping
 If running from the command line, Ctrl+C will stop.
 
-If stopping from another console, using `killall cam_overlay.bin` will stop.
+If stopping from another console, using `killall camoverlay.bin` will stop.
 
 If running from another application, sending a KILLTERM signal will stop.
 
@@ -47,8 +45,9 @@ Command line parameters allow you to tweak the behavior.
 | Command | Long Command | Details |
 |---------|--------------|---------
 | -d       | --device    | v4l2 device name. Default: /dev/video0
-| -m       | --mmap      | Use memory mapped buffers [default]
-| -r       | --read      | Use read() calls
+| -i       | --input     | Input module: V4L2MMap[default], V4L2UserPtr, V4L2Read
+| -o       | --output    | [debug]Output module: Shader
+| -D       | --display   | Display module: X11
 | -u       | --userp     | Use application allocated buffers
 | -s       | --stretch   | Stretch image to screen
 | -R       | --rotate    | Rotate image 180 degrees
