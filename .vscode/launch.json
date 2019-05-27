@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/App/camoverlay.bin",
+            "program": "${workspaceFolder}/bin/camoverlay.bin",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

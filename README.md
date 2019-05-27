@@ -29,7 +29,7 @@ Simply run `cmake . && make`
 # Running
 From the command line, simply run with the appropriate parameters
 
-`./src/App/camoverlay.bin`
+`./bin/camoverlay.bin`
 
 # Stopping
 If running from the command line, Ctrl+C will stop.

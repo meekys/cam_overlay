@@ -61,5 +61,7 @@ Makefile
 # VSCode
 .vscode/ipch/
 
+# Build artifacts
 Generated/
+bin/
 build/
