@@ -9,7 +9,7 @@ DisplayX11::DisplayX11(std::shared_ptr<ILogger> logger, std::shared_ptr<IInput> 
 
     _xDisplay = ::XOpenDisplay(NULL);
     assert(_xDisplay != NULL);
-    
+
     _screen = DefaultScreen(_xDisplay);
     _rootWindow = RootWindow(_xDisplay, _screen);
 
@@ -84,7 +84,7 @@ bool DisplayX11::isClosed()
 
 NativeWindowType DisplayX11::getWindow()
 {
-    return _window;
+    return (NativeWindowType)_window;
 }
 
 uint DisplayX11::getWidth()

@@ -9,7 +9,7 @@ extern std::string ReadFile(std::string filename)
     std::ifstream file(filename, std::ios::in | std::ios::binary);
 
     if (!file)
-        throw ErrNoException();
+        throw ErrNoException("Error opening file "s + filename);
 
     std::ostringstream contents;
     contents << file.rdbuf();

@@ -83,4 +83,4 @@ for size in sizes:
             fill = size.color,
             width = lineWidth)
 
-image.save("overlay.png", "PNG")
+image.save("src/CamOverlay/res/overlay.png", "PNG")

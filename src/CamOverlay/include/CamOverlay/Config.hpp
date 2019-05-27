@@ -13,6 +13,9 @@ class Config
 public:
     Config(Args args);
 
+    std::string AppName;
+    std::string AppPath;
+
     std::string dev_name;
     std::string display;
     std::string input;

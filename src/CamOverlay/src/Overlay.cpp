@@ -13,7 +13,7 @@ VERTEX_T Overlay::ImageQuad[4] =
 Overlay::Overlay(std::shared_ptr<GlContext> glContext, std::shared_ptr<Config> config, std::shared_ptr<IDisplay> display, std::shared_ptr<IInput> input)
     : _glContext(glContext), _config(config), _display(display), _input(input)
 {
-    auto texture = PngTexture::Create("overlay.png");
+    auto texture = PngTexture::Create(_config->AppPath + "/res/overlay.png");
 
     auto aspect = (float)_display->getWidth() / _display->getHeight();
 
@@ -24,7 +24,7 @@ Overlay::Overlay(std::shared_ptr<GlContext> glContext, std::shared_ptr<Config> c
 
     auto matrix = m4_mul(perspective, m4_scaling(vec3(aspect, 1, 1)));
 
-    _image = std::make_shared<Image>(texture, ImageQuad, matrix);
+    _image = std::make_shared<Image>(_config, texture, ImageQuad, matrix);
 }
 
 void Overlay::Draw()

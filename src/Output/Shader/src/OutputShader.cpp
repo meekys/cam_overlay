@@ -31,7 +31,9 @@ OutputShader::OutputShader(std::shared_ptr<ILogger> logger, std::shared_ptr<Conf
 
     _matrix = m4_identity();
 
-    _program = std::make_shared<Gl::Program>(ReadFile("shader.vert"), ReadFile("shader-"s + _config->OutputFormat + ".frag"));
+    _program = std::make_shared<Gl::Program>(
+        ReadFile(_config->AppPath + "/res/shader.vert"),
+        ReadFile(_config->AppPath + "/res/shader-"s + _config->OutputFormat + ".frag"));
     _program->AddUniform("projection_matrix");
     _program->AddAttribute("vertex");
     _program->AddAttribute("uv");

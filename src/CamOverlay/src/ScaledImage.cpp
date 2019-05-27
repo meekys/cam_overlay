@@ -29,7 +29,7 @@ ScaledImage::ScaledImage(std::shared_ptr<Config> config, std::shared_ptr<IDispla
     if (_config->flip_vertical)
         matrix = m4_mul(matrix, m4_scaling(vec3(1, -1, 1)));
 
-    _image = std::make_shared<Image>(texture, ImageQuad, matrix);
+    _image = std::make_shared<Image>(_config, texture, ImageQuad, matrix);
 }
 
 void ScaledImage::Draw()

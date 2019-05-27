@@ -46,8 +46,8 @@ Command line parameters allow you to tweak the behavior.
 |---------|--------------|---------
 | -d       | --device    | v4l2 device name. Default: /dev/video0
 | -i       | --input     | Input module: V4L2MMap[default], V4L2UserPtr, V4L2Read
-| -o       | --output    | [debug]Output module: Shader
-| -D       | --display   | Display module: X11
+| -o       | --output    | Output module: Shader
+| -D       | --display   | Display module: Bmc, X11
 | -u       | --userp     | Use application allocated buffers
 | -s       | --stretch   | Stretch image to screen
 | -R       | --rotate    | Rotate image 180 degrees

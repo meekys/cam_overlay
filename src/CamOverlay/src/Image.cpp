@@ -1,15 +1,17 @@
 #include <CamOverlay/Image.hpp>
 #include <Core/Common.hpp>
 
-Image::Image(std::shared_ptr<Gl::Texture> texture, VERTEX_T (&verticies)[4], mat4_t matrix)
-    : _texture(texture), _matrix(matrix)
+Image::Image(std::shared_ptr<Config> config, std::shared_ptr<Gl::Texture> texture, VERTEX_T (&verticies)[4], mat4_t matrix)
+    : _config(config), _texture(texture), _matrix(matrix)
 {
-    _program = std::make_shared<Gl::Program>(ReadFile("shader.vert"), ReadFile("shader.frag"));
+    _program = std::make_shared<Gl::Program>(
+        ReadFile(_config->AppPath + "/res/shader.vert"),
+        ReadFile(_config->AppPath + "/res/shader.frag"));
     _program->AddUniform("projection_matrix");
     _program->AddAttribute("vertex");
     _program->AddAttribute("uv");
     _program->AddUniform("texture");
-    
+
     _buffer = std::make_shared<Gl::Buffer>(sizeof(verticies), verticies);
 }
 

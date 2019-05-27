@@ -1,7 +1,6 @@
 #pragma once
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
+#include <bcm_host.h>
 #include <memory>
 
 #include <CamOverlay/IDisplay.hpp>
@@ -10,11 +9,11 @@
 
 #include <Gl/GlCommon.hpp>
 
-class DisplayX11 : public IDisplay
+class DisplayBcm : public IDisplay
 {
 public:
-    DisplayX11(std::shared_ptr<ILogger> logger, std::shared_ptr<IInput> input);
-    virtual ~DisplayX11();
+    DisplayBcm(std::shared_ptr<ILogger> logger);
+    virtual ~DisplayBcm();
 
     virtual bool isClosed() override;
     virtual NativeWindowType getWindow() override;
@@ -23,13 +22,11 @@ public:
 
 private:
     std::shared_ptr<ILogger> _logger;
-    std::shared_ptr<IInput>  _input;
 
-    Display*     _xDisplay;
-    int          _screen;
-    Window       _rootWindow;
-    Window       _window;
-    Atom         _wmDeleteWindow;
+    DISPMANX_DISPLAY_HANDLE_T _display;
+    DISPMANX_ELEMENT_HANDLE_T _element;
+    EGL_DISPMANX_WINDOW_T     _window;
+
     unsigned int _width;
     unsigned int _height;
 };

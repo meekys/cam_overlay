@@ -14,13 +14,18 @@ function(add_modules filename type projects modules)
 
     string(TOUPPER "${type}" typeUpper)
     string(TOLOWER "${type}" typeLower)
+
+    list(GET modules 0 firstModule)
+    list(APPEND contents "#define ${typeUpper}_DEFAULT_MODULE \"${firstModule}\"\n")
+    list(APPEND contents "\n")
+
     list(APPEND contents "#define ${typeUpper}_MODULES \\\n")
 
     foreach(module ${modules})
         list(APPEND contents "  result = Check${type}<${type}${module}>(injector, config, \"${module}\")\; \\\n")
-        list(APPEND contents "  \\\n")
         list(APPEND contents "  if (result != nullptr) \\\n")
         list(APPEND contents "    return result\; \\\n")
+        list(APPEND contents "  \\\n")
     endforeach(module)
 
     list(APPEND contents "// ${typeUpper}_MODULES\n")
@@ -43,14 +48,6 @@ message("input_modules ${input_modules}")
 message("output_modules ${output_modules}")
 
 add_executable(camoverlay.bin ${source_files})
-
-#function(prepend var prefix)
-#    SET(listVar "")
-#    FOREACH(f ${${var}})
-#        LIST(APPEND listVar "${prefix}${f}")
-#    ENDFOREACH(f)
-#    SET(${var} "${listVar}" PARENT_SCOPE)
-#endfunction(prepend)
 
 target_link_libraries(
     camoverlay.bin

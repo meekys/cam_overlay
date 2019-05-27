@@ -37,8 +37,8 @@ std::shared_ptr<IOutput> CheckOutput(const auto& injector, std::shared_ptr<Confi
             return injector.template create<std::shared_ptr<T>>();
 
         throw Exception("Output type '" + module + "' does not support output format of '" + config->OutputFormat + "'");
-    }   
-    
+    }
+
     if (config->output == "" && T::SupportsFormat(config->OutputFormat))
         return injector.template create<std::shared_ptr<T>>();
 
@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
         di::bind<ILogger>().to<Logger>()
     );
     auto config = config_injector.create<std::shared_ptr<Config>>();
+    config->input = INPUT_DEFAULT_MODULE;
+    config->display = DISPLAY_DEFAULT_MODULE;
 
     auto core_module = [&config]
     {

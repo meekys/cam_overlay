@@ -11,6 +11,10 @@ endfunction(add_display_project)
 
 find_package(X11)
 
+if(${RASPBERRY_PI})
+  add_display_project(Bcm)
+endif()
+
 if(X11_FOUND)
     add_display_project(X11)
 endif()

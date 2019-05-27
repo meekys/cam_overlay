@@ -1,5 +1,7 @@
 #include <getopt.h>
+#include <experimental/filesystem>
 
+#include <Core/Exceptions/ErrNoException.hpp>
 #include <CamOverlay/Config.hpp>
 
 static const char short_options[] = "?d:i:D:o:srhv";
@@ -24,6 +26,15 @@ Config::Config(Args args)
 {
     auto argc = args.argc;
     auto argv = args.argv;
+
+    auto appName = realpath(argv[0], NULL);
+    if (!appName)
+      throw ErrNoException("Failed to resolve application path "s + argv[0]);
+
+    AppName = appName;
+    AppPath = std::experimental::filesystem::path(appName).parent_path();
+
+    free(appName);
 
     for (;;) {
         int idx;

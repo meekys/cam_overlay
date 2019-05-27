@@ -2,7 +2,11 @@
 
 #include <assert.h>
 
-#include "GL/gl.h"
+#if RASPBERRY_PI
+  #include <GLES/gl.h>
+#else
+  #include "GL/gl.h"
+#endif
 #include "GLES2/gl2.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
