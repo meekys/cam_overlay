@@ -14,7 +14,7 @@ uniform int width;
 varying maxfragp vec2 fragmentUV;
 
 /*
-* Convert from YUVY422 to RGB.
+* Convert from UYVY422 to RGB.
 *
 * This is based on a modified shader used by MovieTexture_Generic.  The input texture is width
 * texels wide, the output texture is width*2 texels wide, and texels
@@ -52,14 +52,14 @@ void main(void)
 
     uv.x = fU;
 
-    // Y1, U, V, Y2
-    maxfragp vec4 yuvy = texture2D( texture, uv );
+    // U, Y1, V, Y2
+    maxfragp vec4 uyvy = texture2D( texture, uv );
 
     maxfragp vec3 yuv;
     if( fOdd <= 0.5 )
-        yuv = yuvy.rgb; // Y1, U, V
+        yuv = uyvy.grb; // Y1, U, V
     else
-        yuv = yuvy.agb; // Y2, U, V
+        yuv = uyvy.arb; // Y2, U, V
     yuv -= vec3(16.0/255.0, 128.0/255.0, 128.0/255.0);
 
     maxfragp mat3 conv = mat3(
