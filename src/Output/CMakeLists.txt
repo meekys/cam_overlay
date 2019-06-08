@@ -9,6 +9,7 @@ function(add_output_project name)
     set(output_modules "${output_modules}" PARENT_SCOPE)
 endfunction(add_output_project)
 
+add_output_project(Jpeg)
 add_output_project(Shader)
 add_output_project(File)
 

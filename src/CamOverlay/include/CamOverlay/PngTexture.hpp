@@ -20,7 +20,7 @@ private:
     void ValidateHeader();
     void AllocateLibPng();
     void Read();
-    GLuint GetFormat(int colorType);
+    Gl::TextureFormat GetFormat(int colorType);
 
     static void ErrorCallback(png_structp pngPtr, png_const_charp error_msg);
     static void ReadDataCallback(png_structp pngPtr, png_bytep data, png_size_t length);
@@ -31,9 +31,9 @@ private:
     png_structp _pngPtr;
     png_infop _infoPtr;
 
-    unsigned int _width;
-    unsigned int _height;
-    GLuint       _format;
+    unsigned int      _width;
+    unsigned int      _height;
+    Gl::TextureFormat _format;
 
     png_byte* _imageData;
     png_byte** _rowPointers;

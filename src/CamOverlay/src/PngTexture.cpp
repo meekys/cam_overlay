@@ -111,15 +111,15 @@ void PngTexture::ReadDataCallback(png_structp pngPtr, png_bytep data, png_size_t
     file->read((char*)data, length);
 }
 
-GLuint PngTexture::GetFormat(int colorType)
+Gl::TextureFormat PngTexture::GetFormat(int colorType)
 {
     switch(colorType)
     {
         case PNG_COLOR_TYPE_RGB:
-            return GL_RGB;
+            return Gl::_8_3;
 
         case PNG_COLOR_TYPE_RGB_ALPHA:
-            return GL_RGBA;
+            return Gl::_8_4;
     }
 
     throw Exception("Unsupported libpng colour type "s + std::to_string(colorType) + " while reading " + _filename);

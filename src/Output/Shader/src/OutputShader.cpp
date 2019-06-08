@@ -24,10 +24,13 @@ OutputShader::OutputShader(std::shared_ptr<ILogger> logger, std::shared_ptr<Conf
     _logger->Info("Initialising OutputShader...");
 
     _texture = std::make_shared<Gl::Texture>(
-        GL_RGBA,
+        Gl::_8_4,
         _input->getWidth() / 2,
         _input->getHeight(),
         nullptr);
+    ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    check();
 
     _matrix = m4_identity();
 
@@ -42,10 +45,7 @@ OutputShader::OutputShader(std::shared_ptr<ILogger> logger, std::shared_ptr<Conf
 
     _buffer = std::make_shared<Gl::Buffer>(sizeof(BufferQuad), BufferQuad);
 
-    auto texture = std::make_shared<Gl::Texture>(GL_RGBA, _input->getWidth(), _input->getHeight(), nullptr);
-    ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    check();
+    auto texture = std::make_shared<Gl::Texture>(Gl::_8_4, _input->getWidth(), _input->getHeight(), nullptr);
 
     _renderBuffer = std::make_shared<Gl::FrameBuffer>(texture);
 
@@ -63,9 +63,10 @@ void OutputShader::UpdateInput(void* data)
         0,
         _input->getWidth() / 2,
         _input->getHeight(),
-        GL_RGBA,
-        GL_UNSIGNED_BYTE,
+        Gl::Texture::TextureFormats[Gl::_8_4].format,
+        Gl::Texture::TextureFormats[Gl::_8_4].type,
         data);
+    check();
 
     _texture->Unbind();
 }
