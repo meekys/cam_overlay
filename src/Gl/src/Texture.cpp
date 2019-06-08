@@ -7,18 +7,7 @@ using namespace Gl;
 const TextureFormatInfo Texture::TextureFormats[] = {
   { GL_RED,      GL_RED,          GL_UNSIGNED_BYTE },
   { GL_RGB,      GL_RGB,          GL_UNSIGNED_BYTE },
-  { GL_RGBA,     GL_RGBA,         GL_UNSIGNED_BYTE },
-  { GL_R8UI,     GL_RED_INTEGER,  GL_UNSIGNED_BYTE },
-  { GL_RGB8UI,   GL_RGB_INTEGER,  GL_UNSIGNED_BYTE },
-  { GL_RGBA8UI,  GL_RGBA_INTEGER, GL_UNSIGNED_BYTE },
-  { GL_R16I,     GL_RED_INTEGER,  GL_SHORT },
-  { GL_RGBA16I,  GL_RGBA_INTEGER, GL_SHORT },
-  { GL_R16UI,    GL_RED_INTEGER,  GL_UNSIGNED_SHORT },
-  { GL_RGBA16UI, GL_RED_INTEGER,  GL_UNSIGNED_SHORT },
-  { GL_R32I,     GL_RED_INTEGER,  GL_INT },
-  { GL_R32UI,    GL_RED_INTEGER,  GL_UNSIGNED_INT },
-  { GL_R32F,     GL_RED,          GL_FLOAT },
-  { GL_RGBA32F,  GL_RGBA,         GL_FLOAT },
+  { GL_RGBA,     GL_RGBA,         GL_UNSIGNED_BYTE }
 };
 
 Texture::Texture(TextureFormat format, GLint width, GLint height, void* data)

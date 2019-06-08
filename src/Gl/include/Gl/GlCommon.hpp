@@ -4,6 +4,7 @@
 
 #if RASPBERRY_PI
   #include <GLES/gl.h>
+  #define GL_RED GL_LUMINANCE
 #else
   #include "GL/gl.h"
 #endif

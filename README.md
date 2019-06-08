@@ -7,6 +7,7 @@ It's primary purpose is to offload as much of the image processing/decoding to t
 ## Common
 - v4l2-dev
 - libpng-dev
+- libjpeg-dev
 - X11-dev [optional]
 
 ## Raspberry Pi
@@ -46,7 +47,7 @@ Command line parameters allow you to tweak the behavior.
 |---------|--------------|---------
 | -d       | --device    | v4l2 device name. Default: /dev/video0
 | -i       | --input     | Input module: V4L2MMap[default], V4L2UserPtr, V4L2Read
-| -o       | --output    | Output module: Shader
+| -o       | --output    | Output module: Jpeg, Shader
 | -D       | --display   | Display module: Bmc, X11
 | -u       | --userp     | Use application allocated buffers
 | -s       | --stretch   | Stretch image to screen
