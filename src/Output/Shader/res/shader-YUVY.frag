@@ -14,9 +14,9 @@ uniform int width;
 varying maxfragp vec2 fragmentUV;
 
 /*
-* Convert from YUYV422 to RGB.
+* Convert from YUVY422 to RGB.
 *
-* This is used by MovieTexture_Generic.  The input texture is width
+* This is based on a modified shader used by MovieTexture_Generic.  The input texture is width
 * texels wide, the output texture is width*2 texels wide, and texels
 * are aligned.  We can use this to determine if the fragment we're generating
 * is even or odd.
@@ -52,14 +52,14 @@ void main(void)
 
     uv.x = fU;
 
-    // Y1, U, Y2, V
-    maxfragp vec4 yuyv = texture2D( texture, uv );
+    // Y1, U, V, Y2
+    maxfragp vec4 yuvy = texture2D( texture, uv );
 
     maxfragp vec3 yuv;
     if( fOdd <= 0.5 )
-        yuv = yuyv.rga; // Y1, U, V
+        yuv = yuvy.rgb; // Y1, U, V
     else
-        yuv = yuyv.bga; // Y2, U, V
+        yuv = yuvy.agb; // Y1, U, V
     yuv -= vec3(16.0/255.0, 128.0/255.0, 128.0/255.0);
 
     maxfragp mat3 conv = mat3(
