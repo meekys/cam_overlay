@@ -114,9 +114,10 @@ void InputV4L2::InitDevice()
 
     _width = fmt.fmt.pix.width;
     _height = fmt.fmt.pix.height;
-    _config->OutputFormat = (char*)format;
+    _config->OutputFormat = std::string((char*)format, 4);
 
-    InitDeviceInternal(fmt.fmt.pix.sizeimage);
+    auto imageSize = fmt.fmt.pix.bytesperline > 0 ? fmt.fmt.pix.bytesperline * fmt.fmt.pix.height : fmt.fmt.pix.sizeimage;
+    InitDeviceInternal(imageSize);
 }
 
 bool InputV4L2::Read(InputData& data)
