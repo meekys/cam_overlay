@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <signal.h>
 
+#include <Core/Exceptions/ErrNoException.hpp>
+
 #include "App.hpp"
 
 static volatile bool running = true;
@@ -28,9 +30,15 @@ void App::Run()
         if (!_input->Read(data))
             continue;
 
+        try
+        {
+            _output->Update(data.data, data.size);
+        }
+        catch (Exception ex)
+        {
+            _logger->Error("Error updating output: %s", ex.what());
+        }
 
-        _output->Update(data.data, data.size);
-        
         _input->EndRead();
 
         ::glClear(GL_COLOR_BUFFER_BIT);

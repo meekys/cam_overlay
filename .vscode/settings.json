@@ -42,6 +42,12 @@
         "utility": "cpp",
         "string": "cpp",
         "cstring": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "chrono": "cpp",
+        "codecvt": "cpp",
+        "ctime": "cpp",
+        "deque": "cpp",
+        "filesystem": "cpp",
+        "ratio": "cpp"
     }
 }

@@ -6,11 +6,6 @@ JpegDecompress::JpegDecompress()
     cinfo.err = jpeg_std_error(&jerr.pub);
     jerr.pub.error_exit = ErrorHandler;
 
-    if (setjmp(jerr.setjmp_buffer))
-    {
-        throw Exception("Error decoding JPEG");
-    }
-
     jpeg_create_decompress(&cinfo);
 }
 
@@ -21,15 +16,9 @@ JpegDecompress::~JpegDecompress()
 
 void JpegDecompress::ErrorHandler(j_common_ptr cinfo)
 {
-  /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
-  my_error_ptr myerr = (my_error_ptr)cinfo->err;
-
-  /* Always display the message. */
-  /* We could postpone this until after returning, if we chose. */
-  (*cinfo->err->output_message)(cinfo);
-
-  /* Return control to the setjmp point */
-  longjmp(myerr->setjmp_buffer, 1);
+    char pszErr[JMSG_LENGTH_MAX];
+    (*cinfo->err->format_message)(cinfo, pszErr);
+    throw Exception(pszErr);
 }
 
 void JpegDecompress::SetMemSrc(void* data, int size)
