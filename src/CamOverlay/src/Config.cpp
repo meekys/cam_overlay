@@ -27,6 +27,9 @@ Config::Config(Args args)
     auto argc = args.argc;
     auto argv = args.argv;
 
+    input = args.defaultInput;
+    display = args.defaultDisplay;
+    
     auto appName = realpath(argv[0], NULL);
     if (!appName)
       throw ErrNoException("Failed to resolve application path "s + argv[0]);

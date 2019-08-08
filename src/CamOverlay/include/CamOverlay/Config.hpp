@@ -6,6 +6,8 @@ struct Args
 {
     int    argc;
     char **argv;
+    std::string defaultInput;
+    std::string defaultDisplay;
 };
 
 class Config

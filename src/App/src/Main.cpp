@@ -47,15 +47,13 @@ std::shared_ptr<IOutput> CheckOutput(const auto& injector, std::shared_ptr<Confi
 
 int main(int argc, char *argv[])
 {
-    Args args { argc, argv };
+    Args args { argc, argv, INPUT_DEFAULT_MODULE, DISPLAY_DEFAULT_MODULE };
 
     auto config_injector = di::make_injector(
         di::bind<Args>().to(args),
         di::bind<ILogger>().to<Logger>()
     );
     auto config = config_injector.create<std::shared_ptr<Config>>();
-    config->input = INPUT_DEFAULT_MODULE;
-    config->display = DISPLAY_DEFAULT_MODULE;
 
     auto core_module = [&config]
     {
