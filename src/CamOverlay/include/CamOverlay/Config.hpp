@@ -22,6 +22,7 @@ public:
     std::string display;
     std::string input;
     std::string output;
+    std::string overlay;
 
     bool stretch;
     bool rotate;

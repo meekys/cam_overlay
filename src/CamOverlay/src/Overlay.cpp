@@ -13,7 +13,7 @@ VERTEX_T Overlay::ImageQuad[4] =
 Overlay::Overlay(std::shared_ptr<GlContext> glContext, std::shared_ptr<Config> config, std::shared_ptr<IDisplay> display, std::shared_ptr<IInput> input)
     : _glContext(glContext), _config(config), _display(display), _input(input)
 {
-    auto texture = PngTexture::Create(_config->AppPath + "/res/overlay.png");
+    auto texture = PngTexture::Create(_config->AppPath + "/" + _config->overlay);
 
     auto aspect = (float)_display->getWidth() / _display->getHeight();
 

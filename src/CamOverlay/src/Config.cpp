@@ -4,7 +4,7 @@
 #include <Core/Exceptions/ErrNoException.hpp>
 #include <CamOverlay/Config.hpp>
 
-static const char short_options[] = "?d:i:D:o:srhv";
+static const char short_options[] = "?d:i:D:o:O:srhv";
 
 static const struct option
 long_options[] = {
@@ -13,6 +13,7 @@ long_options[] = {
     { "input",   required_argument, NULL, 'i' },
     { "display", required_argument, NULL, 'D' },
     { "output",  required_argument, NULL, 'o' },
+    { "overlay", required_argument, NULL, 'O' },
     { "stretch", no_argument,       NULL, 's' },
     { "rotate",  no_argument,       NULL, 'r' },
     { "fliph",   no_argument,       NULL, 'h' },
@@ -21,7 +22,7 @@ long_options[] = {
 };
 
 Config::Config(Args args)
-    : dev_name("/dev/video0"), display("X11"), input("V4L2MMap"), output(""),
+    : dev_name("/dev/video0"), display("X11"), input("V4L2MMap"), output(""), overlay("res/overlay.png"),
       stretch(false), rotate(false), flip_horizontal(false), flip_vertical(false)
 {
     auto argc = args.argc;
@@ -29,7 +30,7 @@ Config::Config(Args args)
 
     input = args.defaultInput;
     display = args.defaultDisplay;
-    
+
     auto appName = realpath(argv[0], NULL);
     if (!appName)
       throw ErrNoException("Failed to resolve application path "s + argv[0]);
@@ -70,6 +71,10 @@ Config::Config(Args args)
             output = optarg;
             break;
 
+        case 'O':
+            overlay = optarg;
+            break;
+
         case 's':
             stretch = true;
             break;
@@ -104,10 +109,11 @@ void Config::Usage(FILE *fp, int /*argc*/, char *argv[])
          "-i | --input         Input module [%s]\n"
          "-o | --output        Output module [auto]\n"
          "-D | --display       Display module [%s]\n"
+         "-O | --overlay       Overlay file [%s]\n"
          "-s | --stretch       Stretch image to screen\n"
          "-r | --rotate        Rotate image 180 degrees\n"
          "-h | --fliph         Flip image horizontally\n"
          "-v | --flipv         Flip image vertically\n"
          "",
-         argv[0], dev_name.c_str(), input.c_str(), display.c_str());
+         argv[0], dev_name.c_str(), input.c_str(), display.c_str(), overlay.c_str());
 }
