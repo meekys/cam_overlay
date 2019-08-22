@@ -3,7 +3,6 @@
 #include <cstring>
 #include <memory>
 #include <linux/videodev2.h>
-#include <assert.h>
 
 #include <CamOverlay/IInput.hpp>
 #include <CamOverlay/Config.hpp>

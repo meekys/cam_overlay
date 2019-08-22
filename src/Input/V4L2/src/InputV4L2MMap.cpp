@@ -1,4 +1,5 @@
 #include <sys/mman.h>
+#include <assert.h>
 
 #include <InputV4L2/InputV4L2MMap.hpp>
 

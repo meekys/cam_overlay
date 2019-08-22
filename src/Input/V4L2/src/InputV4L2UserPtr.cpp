@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include <InputV4L2/InputV4L2UserPtr.hpp>
 
 InputV4L2UserPtr::InputV4L2UserPtr(std::shared_ptr<Config> config, std::shared_ptr<ILogger> logger)

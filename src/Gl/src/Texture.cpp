@@ -1,5 +1,3 @@
-#include <assert.h>
-
 #include <Gl/Texture.hpp>
 
 using namespace Gl;

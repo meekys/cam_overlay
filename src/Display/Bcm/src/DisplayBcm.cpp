@@ -7,13 +7,16 @@ DisplayBcm::DisplayBcm(std::shared_ptr<ILogger> logger)
 {
     _logger->Info("Initialising DisplayBcm...");
 
-    bcm_host_init();
+    auto init = bcm_host_init();
+    if (init < 0)
+        _logger->Warn("bcm_host_init() failed with "_ + init);
 
     // create an EGL window surface
     auto display = 0;
     auto layer = 10;
     auto success = graphics_get_display_size(display /* LCD */, &_width, &_height);
-    assert(success >= 0);
+    if (success < 0)
+        throw Exception("graphics_get_display_size() failed with "_ + success);
 
     VC_RECT_T dst_rect;
     dst_rect.x = 0;

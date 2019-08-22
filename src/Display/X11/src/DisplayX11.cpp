@@ -1,4 +1,4 @@
-#include <assert.h>
+#include <Core/Exceptions/Exception.hpp>
 
 #include <DisplayX11/DisplayX11.hpp>
 
@@ -8,7 +8,8 @@ DisplayX11::DisplayX11(std::shared_ptr<ILogger> logger, std::shared_ptr<IInput> 
     _logger->Info("Initialising DisplayX11...");
 
     _xDisplay = ::XOpenDisplay(NULL);
-    assert(_xDisplay != NULL);
+    if (_xDisplay == NULL)
+        throw Exception("XOpenDisplay failed");
 
     _screen = DefaultScreen(_xDisplay);
     _rootWindow = RootWindow(_xDisplay, _screen);
@@ -27,7 +28,8 @@ DisplayX11::DisplayX11(std::shared_ptr<ILogger> logger, std::shared_ptr<IInput> 
         BlackPixel(_xDisplay, _screen),
         BlackPixel(_xDisplay, _screen));
 
-    assert(_window);
+    if (_window == 0)
+        throw Exception("XCreateSimpleWindow failed");
 
     ::XStoreName(_xDisplay, _window, "cam_overlay");
 

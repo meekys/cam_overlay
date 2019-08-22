@@ -1,5 +1,3 @@
-#include <assert.h>
-
 #include <Gl/FrameBuffer.hpp>
 
 using namespace Gl;

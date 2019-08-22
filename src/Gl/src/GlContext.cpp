@@ -1,5 +1,7 @@
 #include <assert.h>
 
+#include <Core/Exceptions/Exception.hpp>
+
 #include <Gl/Context.hpp>
 
 using namespace Gl;
@@ -8,12 +10,14 @@ Context::Context(NativeWindowType window)
 {
     // get an EGL display connection
     _display = ::eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    assert(_display != EGL_NO_DISPLAY);
+    if (_display == EGL_NO_DISPLAY)
+        throw Exception("Failed to get default EGL display. EGL_NO_DISPLAY");
     check();
 
     // initialize the EGL display connection
     auto result = ::eglInitialize(_display, NULL, NULL);
-    assert(EGL_FALSE != result);
+    if (result == EGL_FALSE)
+        throw Exception("Failed to initialise EGL");
     check();
 
     static const EGLint attribute_list[] =
@@ -52,11 +56,13 @@ Context::Context(NativeWindowType window)
 
     // create an EGL rendering context
     _context = ::eglCreateContext(_display, config, EGL_NO_CONTEXT, context_attributes);
-    assert(_context != EGL_NO_CONTEXT);
+    if (_context == EGL_NO_CONTEXT)
+        throw Exception("Failed to create EGL context. EGL_NO_CONTEXT");
     check();
 
     _surface = ::eglCreateWindowSurface(_display, config, window, NULL);
-    assert(_surface != EGL_NO_SURFACE);
+    if (_surface == EGL_NO_SURFACE)
+        throw Exception("Failed to create EGL window surface. EGL_NO_SURFACE");
     check();
 
     // connect the context to the surface

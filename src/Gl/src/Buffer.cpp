@@ -1,5 +1,3 @@
-#include <assert.h>
-
 #include <Gl/Buffer.hpp>
 
 using namespace Gl;
