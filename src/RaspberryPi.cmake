@@ -22,13 +22,13 @@ if(EXISTS "/opt/vc/include/bcm_host.h")
   )
 
   find_library(OPENGL_gl_LIBRARY
-    NAMES brcmEGL
+    NAMES libbrcmEGL
     PATHS /opt/vc/lib
     NO_DEFAULT_PATH
   )
 
   find_library(OPENGL_egl_LIBRARY
-    NAMES brcmEGL
+    NAMES libbrcmEGL
     PATHS /opt/vc/lib
     NO_DEFAULT_PATH
   )

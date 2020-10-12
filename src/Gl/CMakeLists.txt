@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.9)
 project(Gl)
 
-find_package(OpenGL REQUIRED COMPONENTS EGL)
+find_package(OpenGL COMPONENTS EGL)
 
 include_directories(
     ${OPENGL_INCLUDE_DIR}

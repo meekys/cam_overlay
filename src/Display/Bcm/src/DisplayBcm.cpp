@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <Core/Exceptions/Exception.hpp>
 
 #include <DisplayBcm/DisplayBcm.hpp>
 
@@ -7,16 +8,17 @@ DisplayBcm::DisplayBcm(std::shared_ptr<ILogger> logger)
 {
     _logger->Info("Initialising DisplayBcm...");
 
-    auto init = bcm_host_init();
-    if (init < 0)
-        _logger->Warn("bcm_host_init() failed with "_ + init);
+    // auto init = bcm_host_init();
+    bcm_host_init();
+    // if (init < 0)
+    //     _logger->Warn("bcm_host_init() failed with " + init);
 
     // create an EGL window surface
     auto display = 0;
     auto layer = 10;
     auto success = graphics_get_display_size(display /* LCD */, &_width, &_height);
     if (success < 0)
-        throw Exception("graphics_get_display_size() failed with "_ + success);
+        throw Exception("graphics_get_display_size() failed with " + success);
 
     VC_RECT_T dst_rect;
     dst_rect.x = 0;
