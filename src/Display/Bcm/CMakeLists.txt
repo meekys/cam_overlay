@@ -7,7 +7,7 @@ add_library(DisplayBcm ${source_files})
 
 target_include_directories(DisplayBcm PUBLIC include)
 
-include_directories(${BCM_INCLUDE_DIR})
+target_include_directories(DisplayBcm PUBLIC ${BCM_INCLUDE_DIR})
 
 target_link_libraries(
     DisplayBcm

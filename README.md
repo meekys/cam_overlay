@@ -5,10 +5,9 @@ It's primary purpose is to offload as much of the image processing/decoding to t
 
 # Dependencies
 ## Common
-- v4l2-dev
-- libpng-dev
-- libjpeg-dev
-- X11-dev [optional]
+`sudo apt-get install libv4l-dev libpng-dev libjpeg-dev`
+## Optional
+`sudo apt-get install X11-dev`
 
 ## Raspberry Pi
 ### ilclient

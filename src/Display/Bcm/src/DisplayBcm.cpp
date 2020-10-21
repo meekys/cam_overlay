@@ -8,36 +8,48 @@ DisplayBcm::DisplayBcm(std::shared_ptr<ILogger> logger)
 {
     _logger->Info("Initialising DisplayBcm...");
 
-    // auto init = bcm_host_init();
     bcm_host_init();
-    // if (init < 0)
-    //     _logger->Warn("bcm_host_init() failed with " + init);
 
     // create an EGL window surface
-    auto display = 0;
     auto layer = 10;
-    auto success = graphics_get_display_size(display /* LCD */, &_width, &_height);
-    if (success < 0)
-        throw Exception("graphics_get_display_size() failed with " + success);
+    
+    DISPMANX_DISPLAY_HANDLE_T display
+      = vc_dispmanx_display_open(0 /* LCD */);
+
+    if (display == 0)
+    {
+        throw Exception("cannot open display");
+    }
+
+    DISPMANX_MODEINFO_T info;
+
+    if (vc_dispmanx_display_get_info(display, &info) != 0)
+    {
+        throw Exception("cannot get display dimensions");
+    }
+    printf("Size: %dx%d, Transform: %d\n", info.width, info.height, info.transform);
 
     VC_RECT_T dst_rect;
-    dst_rect.x = 0;
-    dst_rect.y = 0;
-    dst_rect.width = _width;
-    dst_rect.height = _height;
-
     VC_RECT_T src_rect;
-    src_rect.x = 0;
-    src_rect.y = 0;
-    src_rect.width = _width << 16;
-    src_rect.height = _height << 16;
+    VC_IMAGE_TYPE_T type = VC_IMAGE_YUV420;
+    DISPMANX_RESOURCE_HANDLE_T resource;
+    DISPMANX_ELEMENT_HANDLE_T element;
+    uint32_t vc_image_ptr;
+    
+    vc_dispmanx_rect_set(&dst_rect, 0, 0, info.width, info.height);
+    vc_dispmanx_rect_set(&src_rect, 0, 0, info.width << 16, info.height << 16);
+    
+    resource = vc_dispmanx_resource_create(type, 1, 1, &vc_image_ptr);
+    if (resource != 0)
+    {
+        throw Exception("Could not create resource");
+    }
 
-    _display = vc_dispmanx_display_open(display /* LCD */);
-    auto update = vc_dispmanx_update_start(0);
+    DISPMANX_UPDATE_HANDLE_T update = vc_dispmanx_update_start(0);
 
-    _element = vc_dispmanx_element_add(
+    element = vc_dispmanx_element_add(
         update,
-        _display,
+        display,
         layer /*layer*/,
         &dst_rect,
         0 /*src*/,
@@ -49,9 +61,9 @@ DisplayBcm::DisplayBcm(std::shared_ptr<ILogger> logger)
 
     vc_dispmanx_update_submit_sync(update);
 
-    _window.element = _element;
-    _window.width = _width;
-    _window.height = _height;
+    _window.element = element;
+    _window.width = info.width;
+    _window.height = info.height;
 }
 
 DisplayBcm::~DisplayBcm()
