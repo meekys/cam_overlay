@@ -18,7 +18,7 @@ extern NativeWindowType init_window(STATE_T *state, int display_unused, int laye
     log_verbose("XOpenDisplay");
     display = XOpenDisplay(NULL);
     assert(display != NULL);
-    
+
     log_verbose("DefaultScreen");
     screen = DefaultScreen(display);
     log_verbose("RootWindow");
@@ -60,6 +60,11 @@ extern NativeWindowType init_window(STATE_T *state, int display_unused, int laye
     XFlush(display);
 
     return window;
+}
+
+extern void flip_display(STATE_T *state)
+{
+// NOOP
 }
 
 extern void close_display(STATE_T *state)

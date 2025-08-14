@@ -18,6 +18,12 @@ extern void errno_exit(const char *s)
     exit(EXIT_FAILURE);
 }
 
+extern void fail_exit(const char *s)
+{
+    fprintf(stderr, "%s error\n", s);
+    exit(EXIT_FAILURE);
+}
+
 extern char* read_file(const char* filename)
 {
     FILE *file = fopen(filename, "rb");

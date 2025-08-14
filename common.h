@@ -7,6 +7,7 @@
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
 extern void errno_exit(const char *s);
+extern void fail_exit(const char *s);
 extern void gl_exit(const char *s);
 extern char* read_file(const char* filename);
 
@@ -48,9 +49,10 @@ typedef struct
     int                         width;
     int                         height;
     char*                       format;
-    
+
     uint32_t                    screen_width;
     uint32_t                    screen_height;
+    NativeDisplayType           device;
     EGLDisplay                  display;
     EGLContext                  context;
     EGLSurface                  surface;

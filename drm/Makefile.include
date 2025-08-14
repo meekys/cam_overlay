@@ -1,0 +1,6 @@
+
+#CFLAGS+=
+
+LDFLAGS+=-std=c99 -lm -lEGL -lGLESv2 -ldrm -lgbm
+
+INCLUDES+=-I/usr/include/libdrm

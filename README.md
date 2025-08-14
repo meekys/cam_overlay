@@ -5,15 +5,19 @@ It's primary purpose is to offload as much of the image processing/decoding to t
 
 # Dependencies
 ## Common
-- v4l2-dev
+- libv4l-dev
 - libpng-dev
 
-## Raspberry Pi
+## Raspberry Pi (1-3)
 ### ilclient
 ```
 cd /opt/vc/src/hello_pi/libs/ilclient
 make
 ```
+
+## DRM (Raspberry Pi 4-5)
+ - libdrm-dev
+ - libgbm-dev
 
 ## X11 (Debian, Ubuntu, etc...)
  - mesa-common-dev
@@ -22,8 +26,11 @@ make
 TODO: Instructions to install dependencies
 
 # Compiling
-## Raspberry Pi
+## Raspberry Pi (1-3)
 Simply run `make` from the command line in the cam_overlay directory
+
+## DRM (Raspberry Pi 4-5)
+Run `make DISPLAY=drm` from the command line
 
 ## X11 (Debian, Ubuntu, etc...)
 Run `make DISPLAY=x11` from the command line
