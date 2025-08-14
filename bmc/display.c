@@ -58,6 +58,11 @@ extern NativeWindowType init_window(STATE_T *state, int display, int layer)
     return &nativewindow;
 }
 
+extern void flip_display(STATE_T *state)
+{
+// NOOP
+}
+
 extern void close_display(STATE_T *state)
 {
     DISPMANX_UPDATE_HANDLE_T dispman_update;

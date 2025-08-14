@@ -81,6 +81,7 @@ static volatile int running = 1;
 
 extern void init_display(STATE_T *state, int display, int layer);
 extern NativeWindowType init_window(STATE_T *state, int display, int layer);
+extern void flip_display(STATE_T *state);
 extern void close_display(STATE_T *state);
 
 static void interruptHandler(int unused) {
@@ -89,13 +90,14 @@ static void interruptHandler(int unused) {
 
 static void init_ogl(STATE_T *state, int display, int layer)
 {
+    state->device = EGL_DEFAULT_DISPLAY;
     init_display(state, display, layer);
 
     EGLBoolean result;
 
     // get an EGL display connection
     log_verbose("eglGetDisplay");
-    state->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    state->display = eglGetDisplay(state->device);
     assert(state->display != EGL_NO_DISPLAY);
     check();
 
@@ -153,9 +155,6 @@ static void init_ogl(STATE_T *state, int display, int layer)
     assert(state->surface != EGL_NO_SURFACE);
     check();
 
-    assert(state->surface != EGL_NO_SURFACE);
-    check();
-
     // connect the context to the surface
     log_verbose("eglMakeCurrent");
     result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
@@ -183,7 +182,7 @@ static void init_shaders(STATE_T *state, const char* vertex_filename, const char
     char* decoder_fragment_source = read_file(decoder_fragment_filename);
     if (!decoder_fragment_source)
         exit(EXIT_FAILURE);
-        
+
     log_verbose("vertex_source + decoder_fragment_source");
     state->decoder.program = compile_shader_program(vertex_source, decoder_fragment_source);
     state->decoder.uniform_projection_matrix = glGetUniformLocation(state->decoder.program, "projection_matrix");
@@ -399,6 +398,7 @@ static void update_screen(STATE_T *state)
     draw_screen(state);
 
     eglSwapBuffers(state->display, state->surface);
+    flip_display(state);
 }
 
 static void update_image(STATE_T *state, const void* imageData)
